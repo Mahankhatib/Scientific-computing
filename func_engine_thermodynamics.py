@@ -292,6 +292,9 @@ def Velocity_contour():
 ##-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$
 
 
+#todo: add isentropic efficiency calculation, shock detection, and more detailed contour plots with finer grids and more levels. Also, consider adding a function to compute the thrust coefficient and specific impulse for performance analysis.
+
+
     
 
 
