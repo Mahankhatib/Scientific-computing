@@ -2,8 +2,6 @@
 #BIG PICTURE: Combustion Chamber => Converging => throat => Diverging
 #sequence initilization
 #steady_adiabaticc_isentropic-1D flow , gamma=specific heat ratio
-
-import mpmath
 from mpmath import findroot #dangerous in this case: needs good initial guess
 import numpy as np
 from math import sqrt
@@ -40,7 +38,7 @@ print(f"throat at x={x_throat:.4f}")
 print(f"area at throat A={A_star:.4f}")
 
 
-gamma=1.4 #specific heat ratio of air(ideal gas)
+
 cp=1005 # speicfic heat at constant pressure
 R=287
 #find mach number M => showing how fast/slow movement wrt. sound!
@@ -50,7 +48,7 @@ def area_ratio(x):
     return A(x)/A_star
 
 
-def area_ratio_M(M):
+def area_ratio_M(M,gamma):
     exponent=(gamma+1)/(2*(gamma-1))
     base=(2/(gamma+1))*(1+((M**2)*(gamma-1))/2)
     return (1/M)*(base**exponent)
@@ -59,7 +57,7 @@ def area_ratio_M(M):
 
 #Thermodynamic Property Distributions
  
-def mach_at_x(x):
+def mach_at_x(x,gamma):
     R=area_ratio(x)
     if abs(x-x_throat)<1e-6: #special case: sonic: M=1
         return 1
@@ -74,19 +72,19 @@ def mach_at_x(x):
 M_data=[mach_at_x(x) for x in nozzle_positions]
 
 
-def T(M):
+def T(M,gamma):
     scaled_T=1/(1+((gamma-1)/2)*(M**2))
     return scaled_T
 T_data=[T(M) for M in M_data]
-T_exit=T_data[0]/(1+(((gamma-1)/2)*((M_data[-1])**(2))))
+#T_exit=T_data[0]/(1+(((gamma-1)/2)*((M_data[-1])**(2))))
 
-def P(M):
+def P(M,gamma):
     scaled_P=T(M)**(gamma/(gamma-1))
     return scaled_P
 P_data=[P(M) for M in M_data]
 P_exit=P_data[-1]*P_chamber
 
-def Rho(M):
+def Rho(M,gamma):
     scaled_Rho=T(M)**(1/(gamma-1))
     return scaled_Rho
 Rho_data=[Rho(M) for M in M_data]
@@ -113,13 +111,13 @@ for i in range(1,n-1):            #central diff.
 
 #Dynamic Properties
 
-def mass_flow(R=287):
+def mass_flow(gamma,R=287):
     base=2/(gamma+1)
     exponent=(gamma+1)/(2*(gamma-1))
     K=sqrt((gamma)/(R*T_data[0]*T_chamber))
     return A(5)*P_data[0]*P_chamber*K*((base)**(exponent))
 
-def velocity(x):
+def velocity(x,gamma):
     M=mach_at_x(x)
     return M*(sqrt(gamma*R*T(M)*T_chamber))
 v_data=[velocity(x) for x in nozzle_positions]
@@ -166,7 +164,34 @@ residual=LHS+grad_P
 plt.figure()
 plt.plot(nozzle_positions,residual,label="residual")
 
-##-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$
+##-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$  
+def solve(p): #generate data by a single wrapping function 
+    gamma=p
+
+    M_data=[mach_at_x(x) for x in nozzle_positions]
+    #T_data=[T(M) for M in M_data]
+    #P_data=[P(M) for M in M_data]
+    v_data=[velocity(x) for x in nozzle_positions]
+    return np.array(M_data),np.array(v_data)
+
+velocity_snapshot = []
+gamma_values=[]
+
+for heat_ratio in np.linspace(1.2,1.4,80):
+
+    M,V=solve(heat_ratio)
+    velocity_snapshot.append(V.copy())
+    gamma_values.append(heat_ratio)
+
+velocity_data=np.array(velocity_snapshot)
+print(velocity_data)
+
+
+
+
+
+
+##-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$-$  
 
 #PLOTTING NOZZLE PROFILE
     
